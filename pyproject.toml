@@ -1,0 +1,24 @@
+[project]
+name = "stream-video"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "aiohttp>=3.11.11",
+    "aiortc>=1.9.0",
+    "fastapi[standard]>=0.115.6",
+    "jinja2>=3.1.5",
+    "lap>=0.5.12",
+    "opencv-python>=4.10.0.84",
+    "pydantic-settings>=2.7.1",
+    "python-socketio[asyncio]>=5.12.1",
+    "redis>=5.2.1",
+    "shapely>=2.0.7",
+    "ultralytics>=8.3.73",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8.4",
+]
