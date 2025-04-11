@@ -1,6 +1,6 @@
 import math
 
-from cv2 import arrowedLine, line, putText, rectangle
+from cv2 import arrowedLine, putText, rectangle
 from cv2.typing import MatLike
 
 from .tracker_manager import TrackEntity
@@ -19,7 +19,11 @@ class Drawer:
                     detection.center.y - distance * math.sin(angle_rad),
                 )
                 arrowedLine(
-                    new_frame, detection.center.as_tuple(), (int(x), int(y)), color, 2
+                    new_frame,
+                    detection.center.as_tuple(),
+                    (int(x), int(y)),
+                    color,
+                    2,
                 )
             putText(
                 new_frame,

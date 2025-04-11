@@ -1,42 +1,24 @@
-import json
 import math
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 from cv2.typing import MatLike
+from pydantic import BaseModel, Field
 from ultralytics import YOLO
 
 from .coordenate import Coordenate
 from .rect import Rect
 
 
-@dataclass
-class TrackEntity:
+class TrackEntity(BaseModel):
     track_id: int
-    coordenate_1: Coordenate
-    coordenate_2: Coordenate
-    frame: MatLike
     name: str
+    coordenate_1: Coordenate
+    center: Coordenate
+    coordenate_2: Coordenate
     speed: float
     angle_degree: float
-    center: Coordenate
     rect: Rect
-    datetime_detection: datetime = field(default_factory=datetime.now)
-
-    def model_dump(self):
-        return {
-            "trackId": self.track_id,
-            "coordenate1": self.coordenate_1.as_dict(),
-            "coordenate2": self.coordenate_2.as_dict(),
-            "name": self.name,
-            "speed": self.speed,
-            "angle_degree": self.angle_degree,
-            "center": self.center.as_dict(),
-            "datetime_detection": self.datetime_detection.strftime("%Y-%m-%d %H:%M:%S"),
-        }
-
-    def as_string(self):
-        return json.dumps(self.model_dump())
+    datetime_detection: datetime = Field(default_factory=datetime.now)
 
 
 class Tracker:
@@ -72,13 +54,13 @@ class Tracker:
             coord2 = Coordenate(x=int(x2.round()), y=int(y2.round()))
             data_speed = self.speeds_tracks.get(track_id)
             speed = 0
-            rect = Rect(coord1, coord2)
+            rect = Rect(coord1=coord1, coord2=coord2)
             center = rect.center()
             current_time = datetime.now()
             if data_speed and current_time - data_speed[0] >= timedelta(seconds=1):
                 first_point = data_speed[1]
                 first_time = data_speed[0]
-                rect_from_center = Rect(first_point, center)
+                rect_from_center = Rect(coord1=first_point, coord2=center)
                 time_in_seconds = (current_time - first_time).total_seconds()
                 speed = int(rect_from_center.distance() / time_in_seconds)
                 angle_degree = 0
@@ -103,11 +85,10 @@ class Tracker:
                     track_id=track_id,
                     coordenate_1=coord1,
                     coordenate_2=coord2,
-                    frame=frame[coord1.x : coord2.x, coord1.y : coord2.y],
+                    center=center,
                     name=result.names.get(cls, ""),
                     speed=speed,
                     angle_degree=angle,
-                    center=center,
                     rect=rect,
                 )
             )

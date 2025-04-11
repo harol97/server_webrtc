@@ -1,12 +1,13 @@
 import math
 
+from pydantic import BaseModel
+
 from .coordenate import Coordenate
 
 
-class Rect:
-    def __init__(self, coord1: Coordenate, coord2: Coordenate) -> None:
-        self.coord1 = coord1
-        self.coord2 = coord2
+class Rect(BaseModel):
+    coord1: Coordenate
+    coord2: Coordenate
 
     def distance(self) -> float:
         return math.sqrt(
@@ -16,8 +17,8 @@ class Rect:
 
     def center(self) -> Coordenate:
         return Coordenate(
-            int((self.coord1.x + self.coord2.x) / 2),
-            int((self.coord1.y + self.coord2.y) / 2),
+            x=int((self.coord1.x + self.coord2.x) / 2),
+            y=int((self.coord1.y + self.coord2.y) / 2),
         )
 
     def can_calculate_slop(self) -> int:

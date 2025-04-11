@@ -2,12 +2,9 @@ from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaBlackhole, MediaRelay
 from av.video.frame import VideoFrame
 
-from .redis_manager import RedisManager
-from .yolov_tracker.drawer import Drawer
-from .yolov_tracker.tracker_manager import Tracker
-
-pcs = set()
-relay = MediaRelay()
+from src.utils.redis_manager import RedisManager
+from src.utils.yolov_tracker.drawer import Drawer
+from src.utils.yolov_tracker.tracker_manager import Tracker
 
 
 class VideoTransformTrack(MediaStreamTrack):
@@ -36,7 +33,7 @@ class VideoTransformTrack(MediaStreamTrack):
         results = self.yolov_tracker.get_tracks(frame_to_process)
         for result in results:
             self.redis_obj.set(
-                f"{self.user_id}:{result.track_id}", result.as_string(), ex=3 * 60
+                f"{self.user_id}:{result.track_id}", result.model_dump_json(), ex=2 * 60
             )
         frame_result = self.drawer.draw(frame_to_process, results)
         new_frame = VideoFrame.from_ndarray(frame_result, format="bgr24")  # type: ignore
@@ -52,6 +49,7 @@ def on_track(
     user_id: str,
     recorder: MediaBlackhole,
 ):
+    relay = MediaRelay()
     pc.addTrack(VideoTransformTrack(relay.subscribe(track), yolov_tracker, user_id))
     track.on("ended", recorder.stop)
 
@@ -59,7 +57,6 @@ def on_track(
 async def on_connectionstatechange(pc: RTCPeerConnection):
     if pc.connectionState == "failed":
         await pc.close()
-        pcs.discard(pc)
 
 
 async def create_session(
@@ -68,7 +65,6 @@ async def create_session(
     offer = RTCSessionDescription(sdp=sdp, type=session_type)
 
     pc = RTCPeerConnection()
-    pcs.add(pc)
     recorder = MediaBlackhole()
     yolov_tracker = Tracker()
     pc.on("track", lambda track: on_track(track, pc, yolov_tracker, user_id, recorder))

@@ -1,8 +1,7 @@
-from dataclasses import asdict, dataclass
+from pydantic import BaseModel
 
 
-@dataclass
-class Coordenate:
+class Coordenate(BaseModel):
     x: int
     y: int
 
@@ -10,4 +9,4 @@ class Coordenate:
         return (self.x + offset_x, self.y + offset_y)
 
     def as_dict(self):
-        return asdict(self)
+        return self.model_dump()
