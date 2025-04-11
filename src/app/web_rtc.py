@@ -1,4 +1,5 @@
 from datetime import timedelta
+from logging import error
 
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaBlackhole, MediaRelay
@@ -46,7 +47,7 @@ class VideoTransformTrack(MediaStreamTrack):
             new_frame.time_base = frame.time_base
             return new_frame
         except Exception as e:
-            print("error in redis >> ", e)
+            error("error in redis >> ", e)
 
         return frame
 

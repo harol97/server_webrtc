@@ -1,1 +1,1 @@
-uv run --env-file .env -- fastapi run
+uv run --env-file .env -- uvicorn main:app

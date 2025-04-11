@@ -38,4 +38,3 @@ async def on_box(sid, data):
         await socketio_server.emit(
             "on_track", data_to_send, room=event_box.user_id, skip_sid=sid
         )
-        await socketio_server.sleep(1)
