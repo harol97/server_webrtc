@@ -29,21 +29,26 @@ class VideoTransformTrack(MediaStreamTrack):
 
     async def recv(self):
         frame = await self.track.recv()
-        if not isinstance(frame, VideoFrame):
-            raise Exception("Is not VideoFrame")
-        frame_to_process = frame.to_ndarray(format="bgr24")
-        results = self.yolov_tracker.get_tracks(frame_to_process)
-        for result in results:
-            self.redis_obj.set(
-                f"{self.user_id}:{result.track_id}",
-                result.model_dump_json(),
-                ex=timedelta(seconds=0.05),
-            )
-        frame_result = self.drawer.draw(frame_to_process, results)
-        new_frame = VideoFrame.from_ndarray(frame_result, format="bgr24")  # type: ignore
-        new_frame.pts = frame.pts
-        new_frame.time_base = frame.time_base
-        return new_frame
+        try:
+            if not isinstance(frame, VideoFrame):
+                raise Exception("Is not VideoFrame")
+            frame_to_process = frame.to_ndarray(format="bgr24")
+            results = self.yolov_tracker.get_tracks(frame_to_process)
+            for result in results:
+                self.redis_obj.set(
+                    f"{self.user_id}:{result.track_id}",
+                    result.model_dump_json(),
+                    ex=timedelta(seconds=0.05),
+                )
+            frame_result = self.drawer.draw(frame_to_process, results)
+            new_frame = VideoFrame.from_ndarray(frame_result, format="bgr24")  # type: ignore
+            new_frame.pts = frame.pts
+            new_frame.time_base = frame.time_base
+            return new_frame
+        except Exception as e:
+            print("error in redis >> ", e)
+
+        return frame
 
 
 def on_track(
