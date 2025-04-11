@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaBlackhole, MediaRelay
 from av.video.frame import VideoFrame
@@ -33,7 +35,9 @@ class VideoTransformTrack(MediaStreamTrack):
         results = self.yolov_tracker.get_tracks(frame_to_process)
         for result in results:
             self.redis_obj.set(
-                f"{self.user_id}:{result.track_id}", result.model_dump_json(), ex=2 * 60
+                f"{self.user_id}:{result.track_id}",
+                result.model_dump_json(),
+                ex=timedelta(seconds=0.05),
             )
         frame_result = self.drawer.draw(frame_to_process, results)
         new_frame = VideoFrame.from_ndarray(frame_result, format="bgr24")  # type: ignore
