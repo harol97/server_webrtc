@@ -62,7 +62,6 @@ class Tracker:
             return []
         if result.boxes.id is None:
             return []
-        print(result.names)
         for box, tensor_track_id, cls in zip(
             result.boxes.xyxy, result.boxes.id, result.boxes.cls
         ):

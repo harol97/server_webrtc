@@ -23,7 +23,7 @@ class Drawer:
                 )
             putText(
                 new_frame,
-                f"{detection.track_id}-speed: {detection.speed}-angle: {detection.angle_degree}",
+                f"{detection.track_id}-sd: {detection.speed:.1f}-ag: {detection.angle_degree:.1f}",
                 detection.coordenate_1.as_tuple(offset_y=-5),
                 1,
                 1.5,
