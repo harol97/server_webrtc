@@ -38,7 +38,7 @@ class VideoTransformTrack(MediaStreamTrack):
                 self.redis_obj.set(
                     f"{self.user_id}:{result.track_id}",
                     result.model_dump_json(),
-                    ex=1,
+                    px=200,
                 )
             frame_result = self.drawer.draw(frame_to_process, results)
             new_frame = VideoFrame.from_ndarray(frame_result, format="bgr24")  # type: ignore

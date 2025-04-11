@@ -1,10 +1,13 @@
 from typing import cast
 
+from engineio.payload import Payload
 from redis import Redis
 from socketio import AsyncServer
 
 from .event_types import EventBox, EventDirection
 from .setting import setting
+
+Payload.max_decode_packets = setting.max_payload
 
 socketio_server = AsyncServer(async_mode="asgi", cors_allowed_origins=setting.origins)
 
@@ -35,3 +38,4 @@ async def on_box(sid, data):
         await socketio_server.emit(
             "on_track", data_to_send, room=event_box.user_id, skip_sid=sid
         )
+        await socketio_server.sleep(1)

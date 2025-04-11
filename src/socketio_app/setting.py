@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Setting(BaseSettings):
     model_config = SettingsConfigDict(enable_decoding=False)
     origins: list[str]
+    max_payload: int
 
     @field_validator("origins", mode="before")
     @classmethod
