@@ -18,7 +18,7 @@ async def on_join(sid, username):
 async def on_direction(sid, data):
     direction = EventDirection(**data)
     await socketio_server.emit(
-        "direction",
+        "on_direction",
         direction.value.model_dump(by_alias=True),
         room=direction.user_id,
         skip_sid=sid,
@@ -33,5 +33,5 @@ async def on_box(sid, data):
         data_from_redis = cast(list, redis_obj.mget(keys))
         data_to_send = [item for item in data_from_redis if item]
         await socketio_server.emit(
-            "box", data_to_send, room=event_box.user_id, skip_sid=sid
+            "on_track", data_to_send, room=event_box.user_id, skip_sid=sid
         )

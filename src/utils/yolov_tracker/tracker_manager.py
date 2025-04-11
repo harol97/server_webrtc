@@ -12,9 +12,6 @@ from .rect import Rect
 class TrackEntity(BaseModel):
     track_id: int
     name: str
-    coordenate_1: Coordenate
-    center: Coordenate
-    coordenate_2: Coordenate
     speed: float
     angle_degree: float
     rect: Rect
@@ -83,9 +80,6 @@ class Tracker:
             entities.append(
                 TrackEntity(
                     track_id=track_id,
-                    coordenate_1=coord1,
-                    coordenate_2=coord2,
-                    center=center,
                     name=result.names.get(cls, ""),
                     speed=speed,
                     angle_degree=angle,

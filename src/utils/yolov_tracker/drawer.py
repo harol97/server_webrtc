@@ -14,13 +14,14 @@ class Drawer:
             distance = detection.rect.distance() / 2
             angle_rad = math.radians(detection.angle_degree)
             if distance != 0 and detection.angle_degree != 0:
+                center = detection.rect.center()
                 x, y = (
-                    detection.center.x + distance * math.cos(angle_rad),
-                    detection.center.y - distance * math.sin(angle_rad),
+                    center.x + distance * math.cos(angle_rad),
+                    center.y - distance * math.sin(angle_rad),
                 )
                 arrowedLine(
                     new_frame,
-                    detection.center.as_tuple(),
+                    center.as_tuple(),
                     (int(x), int(y)),
                     color,
                     2,
@@ -28,7 +29,7 @@ class Drawer:
             putText(
                 new_frame,
                 f"{detection.track_id}-sd: {detection.speed:.1f}-ag: {detection.angle_degree:.1f}",
-                detection.coordenate_1.as_tuple(offset_y=-5),
+                detection.rect.coord1.as_tuple(offset_y=-5),
                 1,
                 1.5,
                 color,
@@ -36,8 +37,8 @@ class Drawer:
             )
             rectangle(
                 new_frame,
-                detection.coordenate_1.as_tuple(),
-                detection.coordenate_2.as_tuple(),
+                detection.rect.coord1.as_tuple(),
+                detection.rect.coord2.as_tuple(),
                 color,
                 2,
                 2,
