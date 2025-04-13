@@ -9,6 +9,7 @@ from ultralytics import YOLO
 
 from .coordenate import Coordenate
 from .rect import Rect
+from .velocity_estimator import VelocityEstimator
 
 
 class TrackEntity(BaseModel):
@@ -23,9 +24,9 @@ class TrackEntity(BaseModel):
 class Tracker:
     def __init__(self, model="yolo11n.pt") -> None:
         self.yolov = YOLO(model)
+        self.velocityEstimator = VelocityEstimator()
         message_cuda_is_available = "It is" if is_available else "It isn't"
         info(message_cuda_is_available, "using CUDA")
-        self.speeds_tracks: dict[int, tuple[datetime, Coordenate, float, float]] = {}
 
     def get_tracks(self, from_frame: MatLike) -> list[TrackEntity]:
         frame = from_frame.copy()
@@ -52,40 +53,15 @@ class Tracker:
             track_id = int(tensor_track_id)
             coord1 = Coordenate(x=int(x1.round()), y=int(y1.round()))
             coord2 = Coordenate(x=int(x2.round()), y=int(y2.round()))
-            data_speed = self.speeds_tracks.get(track_id)
-            speed = 0
             rect = Rect(coord1=coord1, coord2=coord2)
             center = rect.center()
-            current_time = datetime.now()
-            if data_speed and current_time - data_speed[0] >= timedelta(seconds=1):
-                first_point = data_speed[1]
-                first_time = data_speed[0]
-                rect_from_center = Rect(coord1=first_point, coord2=center)
-                time_in_seconds = (current_time - first_time).total_seconds()
-                speed = int(rect_from_center.distance() / time_in_seconds)
-                angle_degree = 0
-                if rect_from_center.can_calculate_slop():
-                    angle = math.atan2(
-                        center.y - first_point.y, center.x - first_point.x
-                    )
-                    angle_degree = math.degrees(angle)
-                self.speeds_tracks[track_id] = (
-                    datetime.now(),
-                    center,
-                    speed,
-                    angle_degree,
-                )
-            if not data_speed:
-                data_speed = (datetime.now(), center, 0, 0)
-                self.speeds_tracks[track_id] = data_speed
-            speed = data_speed[2]
-            angle = data_speed[3]
+            velocity = self.velocityEstimator.estimate_velocity(track_id, center)
             entities.append(
                 TrackEntity(
                     track_id=track_id,
                     name=result.names.get(cls, ""),
-                    speed=speed,
-                    angle_degree=angle,
+                    speed=velocity.speed,
+                    angle_degree=velocity.angle,
                     rect=rect,
                 )
             )

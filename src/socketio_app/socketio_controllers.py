@@ -47,14 +47,14 @@ async def on_box(sid, data):
 async def read_redis(sid: str, event_box: EventBox):
     async with Redis() as redis_obj:
         while True:
+            await sleep(0.02)
             keys = [
                 f"{event_box.user_id}:{track_id}" for track_id in event_box.track_ids
             ]
             data_from_redis = cast(list, await redis_obj.mget(keys))
             data_to_send = [item for item in data_from_redis if item]
             if not data_to_send:
-                break
+                continue
             await socketio_server.emit(
                 "on_track", data_to_send, room=event_box.user_id, skip_sid=sid
             )
-            await sleep(0.02)
