@@ -32,7 +32,6 @@ class Tracker:
             verbose=False,
             show=False,
             tracker="bytetrack.yaml",
-            classes=[0],
         )
         if not results:
             return []
