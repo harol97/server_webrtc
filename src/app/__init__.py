@@ -13,4 +13,4 @@ main_app.add_middleware(
     allow_headers=["*"],
 )
 main_app.add_api_route("/offer", offer, methods=["POST"])
-main_app.add_api_route("/index", index, methods=["GET"])
+main_app.add_api_route("/", index, methods=["GET"])
