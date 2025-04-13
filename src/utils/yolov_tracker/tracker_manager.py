@@ -23,7 +23,7 @@ class TrackEntity(BaseModel):
 class Tracker:
     def __init__(self, model="yolo11n.pt") -> None:
         self.yolov = YOLO(model)
-        message_cuda_is_available = "is" if is_available else "is not"
+        message_cuda_is_available = "It is" if is_available else "It isn't"
         info(message_cuda_is_available, "using CUDA")
         self.speeds_tracks: dict[int, tuple[datetime, Coordenate, float, float]] = {}
 
