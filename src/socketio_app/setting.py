@@ -6,6 +6,7 @@ class Setting(BaseSettings):
     model_config = SettingsConfigDict(enable_decoding=False)
     origins: list[str]
     max_payload: int
+    delta_time: float = 0.1
 
     @field_validator("origins", mode="before")
     @classmethod

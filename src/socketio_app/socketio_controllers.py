@@ -47,7 +47,7 @@ async def on_box(sid, data):
 async def read_redis(sid: str, event_box: EventBox):
     async with Redis() as redis_obj:
         while True:
-            await sleep(0.02)
+            await sleep(setting.delta_time)
             keys = [
                 f"{event_box.user_id}:{track_id}" for track_id in event_box.track_ids
             ]
