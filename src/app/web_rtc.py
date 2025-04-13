@@ -1,4 +1,3 @@
-from datetime import timedelta
 from logging import error
 
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
@@ -70,14 +69,13 @@ async def on_connectionstatechange(pc: RTCPeerConnection):
 
 
 async def create_session(
-    sdp: str, session_type: str, user_id: str
+    sdp: str, session_type: str, user_id: str, tracker: Tracker
 ) -> RTCSessionDescription:
     offer = RTCSessionDescription(sdp=sdp, type=session_type)
 
     pc = RTCPeerConnection()
     recorder = MediaBlackhole()
-    yolov_tracker = Tracker()
-    pc.on("track", lambda track: on_track(track, pc, yolov_tracker, user_id, recorder))
+    pc.on("track", lambda track: on_track(track, pc, tracker, user_id, recorder))
     pc.on("connectionstatechange", lambda: on_connectionstatechange(pc))
 
     await pc.setRemoteDescription(offer)
