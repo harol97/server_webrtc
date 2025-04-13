@@ -1,8 +1,10 @@
 import math
 from datetime import datetime, timedelta
+from logging import info
 
 from cv2.typing import MatLike
 from pydantic import BaseModel, Field
+from torch.cuda import is_available
 from ultralytics import YOLO
 
 from .coordenate import Coordenate
@@ -21,6 +23,8 @@ class TrackEntity(BaseModel):
 class Tracker:
     def __init__(self, model="yolo11n.pt") -> None:
         self.yolov = YOLO(model)
+        message_cuda_is_available = "is" if is_available else "is not"
+        info(message_cuda_is_available, "using CUDA")
         self.speeds_tracks: dict[int, tuple[datetime, Coordenate, float, float]] = {}
 
     def get_tracks(self, from_frame: MatLike) -> list[TrackEntity]:
