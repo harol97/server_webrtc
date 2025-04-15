@@ -12,6 +12,6 @@ async def index():
 
 
 async def offer(body: OfferBody, setting: SettingDepends):
-    tracker = Tracker(setting.model_name)
+    tracker = Tracker(setting.conf, setting.iou, setting.model_name)
     session = await create_session(body.sdp, body.session_type, body.user_id, tracker)
     return OfferResponse(sdp=session.sdp, session_type=session.type)

@@ -10,6 +10,8 @@ class Setting(BaseSettings):
     model_config = SettingsConfigDict(enable_decoding=False)
     origins: list[str]
     model_name: str = "best.pt"
+    conf: float
+    iou: float
 
     @field_validator("origins", mode="before")
     @classmethod

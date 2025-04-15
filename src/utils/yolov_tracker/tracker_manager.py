@@ -1,5 +1,4 @@
-import math
-from datetime import datetime, timedelta
+from datetime import datetime
 from logging import info
 
 from cv2.typing import MatLike
@@ -22,21 +21,24 @@ class TrackEntity(BaseModel):
 
 
 class Tracker:
-    def __init__(self, model="yolo11n.pt") -> None:
+    def __init__(
+        self,
+        conf: float,
+        iou: float,
+        model="yolo11n.pt",
+    ) -> None:
         self.yolov = YOLO(model)
         self.velocityEstimator = VelocityEstimator()
         message_cuda_is_available = "It is" if is_available else "It isn't"
         info(message_cuda_is_available, "using CUDA")
+        self.conf = conf
+        self.iou = iou
 
     def get_tracks(self, from_frame: MatLike) -> list[TrackEntity]:
         frame = from_frame.copy()
         entities = []
         results = self.yolov.track(
-            frame,
-            persist=True,
-            verbose=False,
-            show=False,
-            tracker="bytetrack.yaml",
+            frame, persist=True, verbose=False, show=False, conf=self.conf, iou=self.iou
         )
         if not results:
             return []
