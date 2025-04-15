@@ -1,4 +1,4 @@
-from asyncio import Task, sleep
+from asyncio import Condition, Task, sleep
 from typing import cast
 
 from engineio.payload import Payload
@@ -46,6 +46,7 @@ async def on_box(sid, data):
 
 async def read_redis(sid: str, event_box: EventBox):
     async with Redis() as redis_obj:
+        number_of_empties_results = 0
         while True:
             await sleep(setting.delta_time)
             keys = [
@@ -54,7 +55,13 @@ async def read_redis(sid: str, event_box: EventBox):
             data_from_redis = cast(list, await redis_obj.mget(keys))
             data_to_send = [item for item in data_from_redis if item]
             if not data_to_send:
-                continue
+                if number_of_empties_results > 5:
+                    continue
+                else:
+                    number_of_empties_results += 1
+            if data_to_send:
+                number_of_empties_results = 0
+            print(data_to_send)
             await socketio_server.emit(
                 "on_track", data_to_send, room=event_box.user_id, skip_sid=sid
             )
