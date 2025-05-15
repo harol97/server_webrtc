@@ -26,6 +26,7 @@ class Tracker:
         conf: float,
         iou: float,
         model="yolo11n.pt",
+        classes: list[int] | None = None,
     ) -> None:
         self.yolov = YOLO(model)
         self.velocityEstimator = VelocityEstimator()
@@ -33,12 +34,19 @@ class Tracker:
         info(message_cuda_is_available, "using CUDA")
         self.conf = conf
         self.iou = iou
+        self.classes = classes
 
     def get_tracks(self, from_frame: MatLike) -> list[TrackEntity]:
         frame = from_frame.copy()
         entities = []
         results = self.yolov.track(
-            frame, persist=True, verbose=False, show=False, conf=self.conf, iou=self.iou
+            frame,
+            persist=True,
+            verbose=False,
+            show=False,
+            conf=self.conf,
+            iou=self.iou,
+            classes=self.classes,
         )
         if not results:
             return []

@@ -1,4 +1,4 @@
-from asyncio import Condition, Task, sleep
+from asyncio import Task, sleep
 from typing import cast
 
 from engineio.payload import Payload
@@ -61,7 +61,6 @@ async def read_redis(sid: str, event_box: EventBox):
                     number_of_empties_results += 1
             if data_to_send:
                 number_of_empties_results = 0
-            print(data_to_send)
             await socketio_server.emit(
                 "on_track", data_to_send, room=event_box.user_id, skip_sid=sid
             )

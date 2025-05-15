@@ -1,24 +1,29 @@
+// get DOM elements
+
+// peer connection
 var pc = null;
+
+// data channel
 var dc = null,
   dcInterval = null;
-const ZoomVideo = window.WebVideoSDK.default;
-const TwilioVideo = Twilio.Video;
 
 function createPeerConnection() {
   var config = {
     sdpSemantics: "unified-plan",
   };
+
   if (document.getElementById("use-stun").checked) {
     config.iceServers = [{ urls: ["stun:stun.l.google.com:19302"] }];
   }
+
   pc = new RTCPeerConnection(config);
-  pc.addEventListener("icegatheringstatechange", () => {}, false);
-  pc.addEventListener("iceconnectionstatechange", () => {}, false);
-  pc.addEventListener("signalingstatechange", () => {}, false);
+
+  // register some listeners to help debugging
+
+  // connect audio / video
   pc.addEventListener("track", (evt) => {
-    console.log("eventos", evt.track);
-    document.getElementById("video").srcObject = evt.streams[0];
-    // startVideoTwilio(evt.track);
+    if (evt.track.kind == "video")
+      document.getElementById("video").srcObject = evt.streams[0];
   });
 
   return pc;
@@ -39,14 +44,13 @@ function enumerateInputDevices() {
   navigator.mediaDevices
     .enumerateDevices()
     .then((devices) => {
-      console.log(devices);
       populateSelect(
         document.getElementById("video-input"),
         devices.filter((device) => device.kind == "videoinput")
       );
     })
     .catch((e) => {
-      alert("hola" + e);
+      alert(e + "1");
     });
 }
 
@@ -93,13 +97,33 @@ function negotiate() {
         method: "POST",
       });
     })
-    .then((response) => response.json())
-    .then((answer) => pc.setRemoteDescription({ ...answer }))
-    .catch((e) => alert("error" + e));
+    .then((response) => {
+      return response.json();
+    })
+    .then((answer) => {
+      console.log(answer);
+      return pc.setRemoteDescription(answer);
+    })
+    .catch((e) => {
+      alert(e + "asdsa");
+    });
 }
 
 function start() {
+  document.getElementById("start").style.display = "none";
+
   pc = createPeerConnection();
+
+  var time_start = null;
+
+  const current_stamp = () => {
+    if (time_start === null) {
+      time_start = new Date().getTime();
+      return 0;
+    } else {
+      return new Date().getTime() - time_start;
+    }
+  };
 
   if (document.getElementById("use-datachannel").checked) {
     var parameters = JSON.parse(
@@ -111,38 +135,60 @@ function start() {
       clearInterval(dcInterval);
     });
     dc.addEventListener("open", () => {
-      // dcInterval = setInterval(() => {
-      //   dc.send(message);
-      // }, 1000);
+      dcInterval = setInterval(() => {
+        var message = "ping " + current_stamp();
+        dc.send(message);
+      }, 1000);
     });
-    dc.addEventListener("message", (evt) => {});
+    dc.addEventListener("message", (evt) => {
+      if (evt.data.substring(0, 4) === "pong") {
+        var elapsed_ms = current_stamp() - parseInt(evt.data.substring(5), 10);
+      }
+    });
   }
+
+  // Build media constraints.
 
   const constraints = {
     audio: false,
-    video: {
-      height: 300,
-      width: 300,
-    },
+    video: false,
   };
 
-  const device = document.getElementById("video-input").value;
-  if (device) {
-    constraints.video.deviceId = { exact: device };
+  if (document.getElementById("use-video").checked) {
+    const videoConstraints = {};
+
+    const device = document.getElementById("video-input").value;
+    if (device) {
+      videoConstraints.deviceId = { exact: device };
+    }
+
+    videoConstraints.width = 100;
+    videoConstraints.height = 100;
+    constraints.video = Object.keys(videoConstraints).length
+      ? videoConstraints
+      : true;
   }
 
-  document.getElementById("media").style.display = "block";
-  navigator.mediaDevices.getUserMedia(constraints).then(
-    (stream) => {
-      stream.getTracks().forEach((track) => {
-        pc.addTrack(track, stream);
-      });
-      return negotiate();
-    },
-    (err) => {
-      alert("Could not acquire media: " + err);
+  // Acquire media and start negociation.
+
+  if (constraints.audio || constraints.video) {
+    if (constraints.video) {
+      document.getElementById("media").style.display = "block";
     }
-  );
+    navigator.mediaDevices.getUserMedia(constraints).then(
+      (stream) => {
+        stream.getTracks().forEach((track) => {
+          pc.addTrack(track, stream);
+        });
+        return negotiate();
+      },
+      (err) => {
+        alert("Could not acquire media: " + err);
+      }
+    );
+  } else {
+    negotiate();
+  }
 
   document.getElementById("stop").style.display = "inline-block";
 }
@@ -164,6 +210,7 @@ function stop() {
     });
   }
 
+  // close local audio / video
   pc.getSenders().forEach((sender) => {
     sender.track.stop();
   });
@@ -231,119 +278,8 @@ function sdpFilterCodec(kind, codec, realSdp) {
   return sdp;
 }
 
-function startVideoTwilio(track) {
-  const token = document.getElementById("username").value;
-
-  // TwilioVideo.connect(
-  //   token,
-  //   { name: "testing", tracks: [track] }
-  // ).then(
-  //   (room) => {
-  //     console.log(`Successfully joined a Room: ${room}`);
-
-  //     room.on("participantConnected", (participant) => {
-  //       console.log(`A remote Participant connected: ${participant}`);
-  //     });
-  //   },
-  //   (error) => {
-  //     console.error(`Unable to connect to Room: ${error.message}`);
-  //   }
-  // );
-  //
-  TwilioVideo.connect(token, { name: "test", tracks: [track] }).then(
-    (room) => {
-      console.log(`Successfully joined a Room: ${room}`);
-      console.log(room.participants);
-      room.participants.forEach((participant) => {
-        participant.tracks.forEach((publication) => {
-          if (publication.isSubscribed) {
-            const track = publication.track;
-
-            document
-              .getElementById("remote-media-div")
-              .appendChild(track.attach());
-          }
-        });
-
-        participant.on("trackSubscribed", (track) => {
-          document
-            .getElementById("remote-media-div")
-            .appendChild(track.attach());
-        });
-      });
-      room.on("participantConnected", (participant) => {
-        console.log(`Participant "${participant.identity}" connected`);
-
-        participant.tracks.forEach((publication) => {
-          if (publication.isSubscribed) {
-            const track = publication.track;
-
-            document
-              .getElementById("remote-media-div")
-              .appendChild(track.attach());
-          }
-        });
-
-        participant.on("trackSubscribed", (track) => {
-          document
-            .getElementById("remote-media-div")
-            .appendChild(track.attach());
-        });
-      });
-    },
-    (error) => {
-      console.error(`Unable to connect to Room: ${error.message}`);
-    }
-  );
-}
-
-function startVideoZoom(track) {
-  console.log(document.getElementById("video").captureStream());
-  const localVideoTrack = ZoomVideo.createLocalVideoTrack(track);
-  getZoomStream().then(({ stream, client }) => {
-    stream.startVideo({ originalRatio: true }).then(() => {
-      stream.renderVideo(
-        document.getElementById("canvas-local"),
-        client.getCurrentUserInfo().userId,
-        400,
-        400,
-        0,
-        0,
-        3
-      );
-    });
-  });
-  // ZoomVideo.getZoomStream().startVideo();
-}
-
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-}
-
-function generateSignature() {
-  const iat = Math.round(new Date().getTime() / 1000) - 30;
-  const exp = iat + 60 * 600 * 2;
-  const oHeader = { alg: "HS256", typ: "JWT" };
-
-  const oPayload = {
-    app_key: "DTC6f93OSNuJrMj57yqaUQ",
-    tpc: "nuevo",
-    role_type: 1,
-    session_key: "1234",
-    version: 1,
-    iat: iat,
-    exp: exp,
-  };
-  const sHeader = JSON.stringify(oHeader);
-  const sPayload = JSON.stringify(oPayload);
-  // @ts-ignore
-  const sdkJWT = KJUR.jws.JWS.sign(
-    "HS256",
-    sHeader,
-    sPayload,
-    "LKX4EmXNz2sQvFhXYweeMyXUkyI1bhTXNOuD"
-  );
-  return sdkJWT;
 }
 
 enumerateInputDevices();

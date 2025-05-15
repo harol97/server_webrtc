@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .controllers import index, offer
 from .setting import setting
 
-main_app = FastAPI()
+main_app = FastAPI(servers=[{"url": "http://localhost:90"}])
 main_app.add_middleware(
     CORSMiddleware,
     allow_origins=setting.origins,
