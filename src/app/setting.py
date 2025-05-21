@@ -13,6 +13,11 @@ class Setting(BaseSettings):
     conf: float
     iou: float
     classes: list[int] | None = None
+    smtp_server: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    email_user: str = "visiondgkop@gmail.com"
+    email_password: str = "oxsikhaneplkiswf"
+    email_to: str = "harolav3@gmail.com"
 
     @field_validator("classes", mode="before")
     @classmethod

@@ -16,3 +16,13 @@ class OfferResponse(BaseModel):
     session_type: Annotated[str, Field(alias="type")]
 
     model_config = {"populate_by_name": True}
+
+
+class FeedbackForm(BaseModel):
+    usability: str
+    technical_issues: str
+    device: str
+    device_other: str = ""
+    liked_aspect: str
+    aspect_to_improve: str
+    future_functionality: str
