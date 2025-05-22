@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class OfferBody(BaseModel):
@@ -19,10 +19,6 @@ class OfferResponse(BaseModel):
 
 
 class FeedbackForm(BaseModel):
-    usability: str
-    technical_issues: str
-    device: str
-    device_other: str = ""
-    liked_aspect: str
-    aspect_to_improve: str
-    future_functionality: str
+    fullname: str
+    email: EmailStr
+    comments: str
